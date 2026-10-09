@@ -1,3 +1,4 @@
 output/
 costs.csv
 __pycache__/
+snapshots/

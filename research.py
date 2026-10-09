@@ -140,25 +140,37 @@ def fetch_bestseller_order(fetcher, base, known_handles, max_pages):
     return order
 
 
+def _money(value):
+    value = (value or "").strip().lstrip("$")
+    return float(value) if value else None
+
+
 def read_costs(path):
-    """costs.csv columns: handle, cost, and optionally store (domain). Keys: (store, handle) and ('', handle)."""
+    """costs.csv columns: handle, cost, and optionally shipping and store (domain).
+
+    Returns {(store, handle): {"cost": float, "shipping": float or None}}; rows without a store use ''.
+    """
     costs = {}
     if not path or not Path(path).exists():
         return costs
     with open(path, newline="", encoding="utf-8-sig") as f:
         for row in csv.DictReader(f):
             row = {(k or "").strip().lower(): (v or "").strip() for k, v in row.items()}
-            handle, cost = row.get("handle", "").lower(), row.get("cost", "").lstrip("$")
-            if not handle or not cost:
-                continue
+            handle = row.get("handle", "").lower()
             try:
-                value = float(cost)
+                cost, shipping = _money(row.get("cost")), _money(row.get("shipping"))
             except ValueError:
-                log(f"costs.csv: skipping bad cost {cost!r} for {handle}")
+                log(f"costs.csv: skipping bad cost/shipping for {handle!r}")
+                continue
+            if not handle or cost is None:
                 continue
             store = store_name(store_base(row["store"])) if row.get("store") else ""
-            costs[(store, handle)] = value
+            costs[(store, handle)] = {"cost": cost, "shipping": shipping}
     return costs
+
+
+def lookup_cost(costs, store, handle):
+    return costs.get((store, handle)) or costs.get(("", handle))
 
 
 def tokens(title):
@@ -252,7 +264,7 @@ def build_rows(store_data, costs, now):
             price = price_of(p)
             images = p.get("images") or []
             published = parse_time(p.get("published_at") or p.get("created_at"))
-            cost = costs.get((store, handle), costs.get(("", handle)))
+            cost = (lookup_cost(costs, store, handle) or {}).get("cost")
             variants = p.get("variants") or []
             rows.append({
                 "store": store,
@@ -290,7 +302,7 @@ def build_rows(store_data, costs, now):
 
 
 CSV_FIELDS = [
-    "rank", "score", "store", "title", "vendor", "product_type", "price", "cost", "margin",
+    "rank", "score", "store", "handle", "title", "vendor", "product_type", "price", "cost", "margin",
     "available", "published_at", "bestseller_rank", "similar_stores",
     "s_bestseller", "s_similar", "s_price", "s_recent", "s_margin", "url", "image",
 ]
@@ -413,15 +425,37 @@ h2 a:hover {{ text-decoration:underline; }}
     Path(path).write_text(page, encoding="utf-8")
 
 
+SNAPSHOT_FIELDS = [
+    "store", "handle", "title", "product_type", "price", "available", "published_at",
+    "bestseller_rank", "score", "url", "image",
+]
+
+
+def write_snapshot(rows, store_data, snapshot_dir, now):
+    """Save today's catalog as snapshots/YYYY-MM-DD.json (one per UTC day; a rerun replaces it)."""
+    path = Path(snapshot_dir) / f"{now.date().isoformat()}.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    data = {
+        "generated": now.isoformat(timespec="seconds"),
+        # Only stores that downloaded successfully, so trends.py can ignore stores that failed on either day.
+        "stores": {store_name(base): len(products) for base, (products, _) in store_data.items()},
+        "products": [{**{k: r[k] for k in SNAPSHOT_FIELDS}, "score": round(r["score"], 1)} for r in rows],
+    }
+    path.write_text(json.dumps(data, separators=(",", ":")), encoding="utf-8")
+    return path
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--stores", default="stores.txt", help="file with one store domain per line")
-    ap.add_argument("--costs", default="costs.csv", help="optional CSV with handle,cost[,store]")
+    ap.add_argument("--costs", default="costs.csv", help="optional CSV with handle,cost[,shipping,store]")
     ap.add_argument("--out-dir", default="output", help="where to write the CSV and HTML report")
     ap.add_argument("--max-pages", type=int, default=10, help="max /products.json pages per store")
     ap.add_argument("--bestseller-pages", type=int, default=5, help="max best-seller collection pages per store")
     ap.add_argument("--delay", type=float, default=1.0, help="seconds between requests")
     ap.add_argument("--top", type=int, default=200, help="products shown in the HTML report")
+    ap.add_argument("--snapshot-dir", default="snapshots", help="where to save the dated snapshot for trends.py")
+    ap.add_argument("--no-snapshot", action="store_true", help="don't save a snapshot")
     args = ap.parse_args(argv)
 
     stores = read_stores(args.stores)
@@ -463,6 +497,8 @@ def main(argv=None):
     write_csv(rows, out / "products_ranked.csv")
     write_html(rows, out / "report.html", summary, args.top, now.strftime("%Y-%m-%d %H:%M UTC"))
     log(f"Wrote {out / 'products_ranked.csv'} and {out / 'report.html'} ({len(rows)} products)")
+    if not args.no_snapshot:
+        log(f"Saved snapshot {write_snapshot(rows, store_data, args.snapshot_dir, now)}")
 
     print(f"\nTop {min(10, len(rows))}:")
     print(f"{'#':>3} {'score':>5}  {'price':>8}  {'store':<22} title")
