@@ -1,6 +1,6 @@
 # Product Research
 
-Three scripts for finding products worth selling. They use only the Python 3 standard library: no installs needed.
+Three scripts for finding products worth selling, plus `daily.py` to run them on a schedule. They use only the Python 3 standard library: no installs needed.
 
 | Script | Answers |
 |---|---|
@@ -8,13 +8,41 @@ Three scripts for finding products worth selling. They use only the Python 3 sta
 | `trends.py` | What changed since last time: climbers, new launches, price and stock moves? |
 | `profit.py` | Can this product make money with paid ads? (break-even ROAS) |
 
-Typical routine: run `research.py` daily (cron or a scheduled task), then `trends.py` and `profit.py`.
+Run all three once a day with `daily.py` (see [Run it daily](#run-it-daily)), or one at a time:
 
 ```sh
 python3 research.py      # output/products_ranked.csv, output/report.html, snapshots/YYYY-MM-DD.json
 python3 trends.py        # output/trends.csv, output/trends.html
 python3 profit.py        # output/profit.csv
 ```
+
+## Run it daily
+
+```sh
+python3 daily.py                  # research → trends → profit
+python3 daily.py --days 7         # trends vs. a week ago instead of the last run
+python3 daily.py --cost-pct 35    # profit with estimated costs where costs.csv has none
+```
+
+`daily.py` runs `research.py` first. It then runs `trends.py` once there are snapshots from two different days, and `profit.py` when `costs.csv` exists (or `--cost-pct` is given). It works from any folder and appends everything to `logs/YYYY-MM-DD.log`. It exits non-zero if a step fails. Reports are overwritten each day; the dated snapshots keep the history.
+
+A run takes a few minutes, mostly because of the 1-second delay between requests. The computer needs to be on and online at the scheduled time.
+
+**macOS / Linux (cron).** Run `crontab -e` and add a line, using your own paths (`which python3` shows the Python path). For 7:15 every morning:
+
+```
+15 7 * * * /usr/bin/python3 /path/to/product-research/daily.py >/dev/null 2>&1
+```
+
+On macOS, if the repo is in Documents, Desktop or Downloads, cron needs Full Disk Access: System Settings → Privacy & Security → Full Disk Access → add `/usr/sbin/cron`. Alternatively, keep the repo somewhere else, such as `~/product-research`.
+
+**Windows (Task Scheduler).** In Command Prompt, using your own paths (`where python` shows the Python path):
+
+```
+schtasks /create /tn "Product Research" /sc daily /st 07:15 /tr "\"C:\Path\To\python.exe\" \"C:\path\to\product-research\daily.py\""
+```
+
+Run it once now with `schtasks /run /tn "Product Research"` and check `logs\`. Remove it with `schtasks /delete /tn "Product Research"`.
 
 ## research.py
 
