@@ -56,6 +56,9 @@ jobs:
       - name: Run research, trends and profit
         env:
           COST_PCT: ${{ inputs.cost_pct }}
+          # Stores often block GitHub's servers (HTTP 429). A PROXY_URL secret such as
+          # http://user:pass@proxy.example.com:8000 sends requests through a proxy instead.
+          HTTPS_PROXY: ${{ secrets.PROXY_URL }}
         run: |
           python3 daily.py --keep-days "$KEEP_DAYS" --summary summary.md ${COST_PCT:+--cost-pct "$COST_PCT"}
 

@@ -107,7 +107,13 @@ def read_stores(path):
 def fetch_products(fetcher, base, max_pages):
     products = []
     for page in range(1, max_pages + 1):
-        data = json.loads(fetcher.get(f"{base}/products.json?limit={PAGE_SIZE}&page={page}"))
+        try:
+            data = json.loads(fetcher.get(f"{base}/products.json?limit={PAGE_SIZE}&page={page}"))
+        except Exception as e:
+            if not products:
+                raise
+            log(f"  page {page} failed ({e}); keeping the {len(products)} products already downloaded")
+            break
         batch = data.get("products", [])
         products.extend(batch)
         log(f"  products page {page}: {len(batch)}")

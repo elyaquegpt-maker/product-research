@@ -38,7 +38,9 @@ Each run:
 **Caveats:**
 - GitHub can start scheduled runs late when it's busy.
 - GitHub pauses schedules in public repos after 60 days without activity, and sends an email. Re-enable on the Actions tab.
-- Some stores block traffic from cloud servers. The run summary lists what each store returned.
+- Shopify stores often block GitHub's servers outright: the first test run got HTTP 429 from all six seed stores. The run summary lists what each store returned.
+
+**If stores block the runs:** send requests through a proxy. Most scraping proxy services (residential or rotating proxies) give you a URL like `http://user:pass@host:port`. Save it as a repository secret named `PROXY_URL`, and the workflow sends every request through it. With no secret set, requests go out directly.
 
 
 ```sh
