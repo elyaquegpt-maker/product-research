@@ -8,7 +8,7 @@ Three scripts for finding products worth selling, plus `daily.py` to run them on
 | `trends.py` | What changed since last time: climbers, new launches, price and stock moves? |
 | `profit.py` | Can this product make money with paid ads? (break-even ROAS) |
 
-Run all three once a day with `daily.py` (see [Run it daily](#run-it-daily)), or one at a time:
+It runs every day in the cloud on GitHub Actions (see [Runs in the cloud](#runs-in-the-cloud)). You can also run all three with `daily.py`, or one at a time:
 
 ```sh
 python3 research.py      # output/products_ranked.csv, output/report.html, snapshots/YYYY-MM-DD.json
@@ -16,7 +16,30 @@ python3 trends.py        # output/trends.csv, output/trends.html
 python3 profit.py        # output/profit.csv
 ```
 
-## Run it daily
+## Runs in the cloud
+
+`.github/workflows/daily-research.yml` runs `daily.py` on GitHub Actions every day at 06:17 UTC. Your computer doesn't need to be on.
+
+Each run:
+1. Restores past snapshots from the `data` branch.
+2. Runs research → trends → profit. Snapshots older than 120 days are deleted (`KEEP_DAYS` in the workflow).
+3. Saves the snapshots and latest reports to the `data` branch. That branch holds a single commit that is replaced on every run, so the repo doesn't grow forever.
+4. Uploads `output/` and `logs/` as a downloadable artifact, kept for 30 days.
+
+**Where to see results:**
+- **Quick look:** repo → **Actions** → *Daily product research* → the latest run. The page shows the top 10, trends and profit summary (works on a phone).
+- **Full reports:** download the `reports-N` artifact at the bottom of that run page, unzip it, and open `report.html` or `trends.html` in a browser.
+- **History:** the `data` branch has `latest/` (CSVs, plus `README.md` with the summary) and `snapshots/`.
+
+**Run it now:** Actions → *Daily product research* → **Run workflow**. The optional `cost_pct` input estimates missing costs as a percentage of price.
+
+**Real supplier costs:** add the contents of your `costs.csv` as a repository secret named `COSTS_CSV` (Settings → Secrets and variables → Actions → New repository secret). The workflow only uses it when the **repository is private**. In a public repo, anyone can see the logs, run summary and artifacts, and the profit numbers would reveal your costs. A private repo gets 2,000 free Actions minutes a month, and a run takes a few minutes.
+
+**Caveats:**
+- GitHub can start scheduled runs late when it's busy.
+- GitHub pauses schedules in public repos after 60 days without activity, and sends an email. Re-enable on the Actions tab.
+- Some stores block traffic from cloud servers. The run summary lists what each store returned.
+
 
 ```sh
 python3 daily.py                  # research → trends → profit

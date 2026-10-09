@@ -487,6 +487,8 @@ def main(argv=None):
         summary.append((name, f"{len(products)} products, {len(bestsellers)} in best-seller order"))
 
     if not store_data:
+        for name, msg in summary:
+            log(f"  {name}: {msg}")
         log("No store returned products; nothing to score.")
         return 1
 
@@ -500,6 +502,9 @@ def main(argv=None):
     if not args.no_snapshot:
         log(f"Saved snapshot {write_snapshot(rows, store_data, args.snapshot_dir, now)}")
 
+    print("Stores:")
+    for name, msg in summary:
+        print(f"  {name}: {msg}")
     print(f"\nTop {min(10, len(rows))}:")
     print(f"{'#':>3} {'score':>5}  {'price':>8}  {'store':<22} title")
     for r in rows[:10]:

@@ -288,6 +288,7 @@ def main(argv=None):
     log(f"Compared {old_path.stem} → {new_path.stem}: {len(rows)} products changed. "
         f"Wrote {out / 'trends.csv'} and {out / 'trends.html'}")
 
+    print(f"{old_path.stem} → {new_path.stem}: {len(rows)} products changed")
     for key, label, _ in SIGNALS:
         group = [r for r in rows if r["signal"] == key]
         if not group:

@@ -1,0 +1,93 @@
+name: Daily product research
+
+on:
+  schedule:
+    - cron: "17 6 * * *" # every day at 06:17 UTC
+  workflow_dispatch:
+    inputs:
+      cost_pct:
+        description: "Estimate missing costs as this percent of price (blank = only real costs)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write # push snapshots and reports to the data branch
+
+concurrency:
+  group: daily-research
+  cancel-in-progress: false
+
+env:
+  KEEP_DAYS: "120" # snapshots older than this are deleted
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore snapshots from the data branch
+        run: |
+          mkdir -p snapshots
+          if git fetch origin data:refs/remotes/origin/data 2>/dev/null; then
+            git archive refs/remotes/origin/data snapshots | tar -x || echo "No snapshots on the data branch yet"
+          else
+            echo "No data branch yet; this is the first run"
+          fi
+          ls snapshots
+
+      - name: Add costs.csv from the COSTS_CSV secret
+        env:
+          COSTS_CSV: ${{ secrets.COSTS_CSV }}
+          REPO_PRIVATE: ${{ github.event.repository.private }}
+        run: |
+          if [ -z "$COSTS_CSV" ]; then
+            echo "No COSTS_CSV secret; profit.py runs only with cost_pct estimates."
+          elif [ "$REPO_PRIVATE" != "true" ]; then
+            # Logs, the run summary and artifacts of a public repo are public, and profit
+            # numbers reveal your costs. Make the repo private to use real costs here.
+            echo "::warning::COSTS_CSV ignored because this repository is public. Make it private to use real costs."
+          else
+            printf '%s\n' "$COSTS_CSV" > costs.csv
+            echo "costs.csv written ($(($(wc -l < costs.csv) - 1)) rows)"
+          fi
+
+      - name: Run research, trends and profit
+        env:
+          COST_PCT: ${{ inputs.cost_pct }}
+        run: |
+          python3 daily.py --keep-days "$KEEP_DAYS" --summary summary.md ${COST_PCT:+--cost-pct "$COST_PCT"}
+
+      - name: Show results on the run page
+        if: always()
+        run: if [ -f summary.md ]; then cat summary.md >> "$GITHUB_STEP_SUMMARY"; fi
+
+      - name: Save snapshots and latest reports to the data branch
+        if: success()
+        run: |
+          # The data branch holds one commit, replaced every run, so the repo doesn't grow forever.
+          git worktree add --detach ../data-branch
+          cd ../data-branch
+          git switch --orphan data-new
+          mkdir -p snapshots latest
+          cp "$GITHUB_WORKSPACE"/snapshots/*.json snapshots/
+          for f in report.html products_ranked.csv trends.html trends.csv; do
+            [ -f "$GITHUB_WORKSPACE/output/$f" ] && cp "$GITHUB_WORKSPACE/output/$f" latest/
+          done
+          cp "$GITHUB_WORKSPACE/summary.md" latest/README.md
+          git add -f snapshots latest
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Data for $(date -u +%F)"
+          git push -f origin HEAD:refs/heads/data
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports-${{ github.run_number }}
+          path: |
+            output/
+            logs/
+          if-no-files-found: ignore
+          retention-days: 30
