@@ -32,11 +32,13 @@ PRODUCTS = [
     ("Embroidered dad hat", 29.99, 12.95, 5.00),
     ("Mug 11oz", 19.99, 5.02, 7.50),
     ("Poster 12x18 (matte)", 24.99, 8.50, 5.50),
+    ("Poster 18x24 (matte)", 34.99, 12.00, 6.50),
     ("Kiss-cut sticker 3x3", 4.99, 1.21, 4.00),
     ("Ceramic ornament", 18.99, 4.93, 4.50),
     ("Desk mat", 32.99, 10.67, 6.50),
     ("Tumbler 20oz (stainless)", 34.99, 21.79, 7.50),
-    ("Sherpa fleece blanket 50x60", 69.99, 24.79, 10.00),
+    ("Sherpa fleece blanket 50x60", 54.99, 24.79, 10.00),
+    ("Framed poster (small, Roma Imaging)", 69.99, 35.89, 9.00),
 ]
 
 

@@ -1,6 +1,6 @@
 # What to Sell on Etsy with Printify: A Deep Dive (October 2026)
 
-**Bottom line:** Build an Etsy shop around **personalized, niche-specific apparel** (Comfort Colors tees and Gildan 18000 sweatshirts, with embroidery as the trend play) and **wall art**. Add **ceramic ornaments** for Q4, and use **desk mats** and **sherpa blankets** as higher-priced items. Skip stand-alone stickers and stainless tumblers. Stickers lose money on their own because of fixed fees and shipping. Tumblers cost too much to make for Etsy price points. Generic slogan tees and AI pet portraits are saturated. The product matters less than **who it's for**: "Goldendoodle mom" beats "dog lover" every time.
+**Bottom line:** Build an Etsy shop around **personalized, niche-specific apparel** (Comfort Colors tees and Gildan 18000 sweatshirts, with embroidery as the trend play) and **wall art**. Add **ceramic ornaments** for Q4, and use **desk mats** and **sherpa blankets** as higher-priced items. For a per-product design brief on wall art, ornaments, desk mats and blankets, see [PRODUCTION_BRIEF_HOME_GIFTS.md](PRODUCTION_BRIEF_HOME_GIFTS.md). Skip stand-alone stickers and stainless tumblers. Stickers lose money on their own because of fixed fees and shipping. Tumblers cost too much to make for Etsy price points. Generic slogan tees and AI pet portraits are saturated. The product matters less than **who it's for**: "Goldendoodle mom" beats "dog lover" every time.
 
 > **How solid is this?** No public dataset shows real Etsy sales for Printify-fulfilled products. This report combines Printify's own catalog prices, Etsy's fee schedule, Etsy's official trend reports, and third-party seller-tool research. It then runs the numbers on per-sale profit, which is the one part you can calculate exactly. Where a claim comes from a vendor that profits from it (including Printify), it says so. Rerun `python3 etsy_printify.py` with your real prices before you commit.
 
@@ -18,7 +18,7 @@ Each product is scored 1–5 on six factors. **Profit $** is dollars kept per sa
 | Ceramic ornament | 4 (Q4 only) | 3 | 5 | 3 | 4 | 4 | **Seasonal must-have** |
 | Embroidered hat / sweatshirt | 4 | 3 | 3 | 4 | 4 | 5 | **Trend play** |
 | Desk mat | 3 | 4 | 3 | 4 | 5 | 3 | **Strong niche add-on** |
-| Sherpa blanket (photo / family) | 3 | 5 | 5 | 3 | 4 | 3 | **High-ticket gift item** |
+| Sherpa blanket (photo / family) | 3 | 4 | 5 | 2 | 4 | 3 | **Gift item, only with a designed look** |
 | Mug 11oz / 15oz | 4 | 2 | 5 | 1 | 2 | 2 | Only with personalization |
 | Bella+Canvas 3001 tee | 4 | 3 | 5 | 1 | 4 | 3 | Fine, but CC 1717 earns more per sale |
 | Journals / notebooks | 3 | 3 | 4 | 4 | 5 | 5 | Test (analog revival) |
@@ -36,13 +36,15 @@ Run `python3 etsy_printify.py`, or add `--premium` for Printify Premium pricing.
 
 - **Etsy fees (US):** $0.20 listing, plus 6.5% transaction fee and 3% + $0.25 payment processing on the order total. Offsite Ads take **15%** of the order when an offsite ad drives the sale (12% once a shop passes $10k a year), capped at $100.
 - **"Free shipping" pricing:** the shipping cost is built into the price. Etsy's search favors free US shipping on orders over $35, and the fees above apply to the whole order either way.
-- **Base cost** is Printify's listed "from" price: the cheapest provider at the standard size. Better providers often cost $1–3 more. **Shipping** figures are my estimates for one item to a US address. Check your provider's real rates.
+- **Base cost** is Printify's listed "from" price (the 18×24 poster base is my estimate): the cheapest provider at the standard size. Better providers often cost $1–3 more. **Shipping** figures are my estimates for one item to a US address. Check your provider's real rates.
 
 ### Printify Free plan
 
 | Product | Price | Base | Ship | Etsy fees | **Profit** | Margin | If an offsite ad drove it | Break-even Etsy Ads ROAS |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Sherpa fleece blanket 50x60 | $69.99 | $24.79 | $10.00 | $7.10 | **$28.10** | 40.1% | $17.60 | 2.49x |
+| Framed poster (small, Roma Imaging) | $69.99 | $35.89 | $9.00 | $7.10 | **$18.00** | 25.7% | $7.50 | 3.89x |
+| Sherpa fleece blanket 50x60 | $54.99 | $24.79 | $10.00 | $5.67 | **$14.53** | 26.4% | $6.28 | 3.79x |
+| Poster 18x24 (matte) | $34.99 | $12.00 | $6.50 | $3.77 | **$12.72** | 36.3% | $7.47 | 2.75x |
 | Desk mat | $32.99 | $10.67 | $6.50 | $3.58 | **$12.24** | 37.1% | $7.29 | 2.7x |
 | Crewneck sweatshirt (Gildan 18000) | $42.99 | $17.87 | $8.49 | $4.53 | **$12.10** | 28.1% | $5.65 | 3.55x |
 | T-shirt (Comfort Colors 1717) | $32.99 | $12.65 | $4.75 | $3.58 | **$12.01** | 36.4% | $7.06 | 2.75x |
@@ -58,7 +60,9 @@ Run `python3 etsy_printify.py`, or add `--premium` for Printify Premium pricing.
 
 | Product | Profit (Free) | **Profit (Premium)** | Change |
 |---|---:|---:|---:|
-| Sherpa blanket | $28.10 | **$33.06** | +$4.96 |
+| Framed poster (small) | $18.00 | **$25.18** | +$7.18 |
+| Sherpa blanket | $14.53 | **$19.49** | +$4.96 |
+| Poster 18x24 | $12.72 | **$15.12** | +$2.40 |
 | Gildan 18000 sweatshirt | $12.10 | **$15.67** | +$3.57 |
 | Comfort Colors 1717 tee | $12.01 | **$14.54** | +$2.53 |
 | Desk mat | $12.24 | **$14.37** | +$2.13 |
@@ -119,7 +123,7 @@ A rough benchmark from seller-tool vendors: a niche with **500–2,000 competing
 3. **Personalized wall art.** Custom maps, wedding vows, birth announcements, pet line art. Posters rarely get returned and ship flat. Offer framed and canvas versions as upsells.
 4. **Ceramic ornaments (list them in September and October).** First Christmas, pet memorial, new home, baby. $4.93 base, near-100% personalization fit, and buyers often order several.
 5. **Desk mats.** Aesthetic and hobby niches (cottagecore maps, birding, D&D, mahjong). $12+ profit per sale, rarely damaged, low competition.
-6. **Sherpa blankets.** Family photo collages, "grandma's" blankets, pet memorials. The highest dollars per sale ($28+). It's a gift item, so most sales come in Q4 and around Mother's Day.
+6. **Sherpa blankets.** "Grandma's" name blankets, family and pet memorial designs. About $14.50 per sale at the realistic $54.99 price (the median Etsy grandma blanket is about $50). Plain photo-collage blankets are a price war, so sell designed blankets. It's a gift item, so most sales come in Q4 and around Mother's Day.
 7. **Personalized mugs.** Only with names, dates or inside jokes, priced at $22.99 or more. Use the 15oz size to justify the higher price.
 8. **Journals and notebooks.** Test them in analog-revival niches (reading logs, garden journals, recipe books).
 
