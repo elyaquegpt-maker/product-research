@@ -7,6 +7,7 @@ Three scripts for finding products worth selling, plus `daily.py` to run them on
 | `research.py` | Which products look strongest across these stores right now? |
 | `trends.py` | What changed since last time: climbers, new launches, price and stock moves? |
 | `profit.py` | Can this product make money with paid ads? (break-even ROAS) |
+| `etsy_printify.py` | Profit per Etsy sale for Printify products, after Etsy fees (see [ETSY_PRINTIFY_DEEP_DIVE.md](ETSY_PRINTIFY_DEEP_DIVE.md)) |
 
 It runs every day in the cloud on GitHub Actions (see [Runs in the cloud](#runs-in-the-cloud)). You can also run all three with `daily.py`, or one at a time:
 
